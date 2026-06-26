@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACI · Human Mark Down — deterministic role attribution in Markdown</title>
+<meta name="description" content="HACI (Human-AI Collaborative Interchange) / Human Mark Down — a semantic Markdown profile that tags every line by authorial role (human command ! · AI proposal · documentation · evidence > · question ? · code · heading) with a single-pass, deterministic, language-model-free parser. The first specified member of the ACI family. Live parser. David Lee Wise / Bridge-Burners LLC, ROOT0.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500&family=Spectral:ital,wght@0,300;0,400;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--sea:#0e0a1c;--line:rgba(150,150,200,.16);--lead:#9a98b6;--lead-dim:#5b5878;
+    --parch:#e7e3f0;--parch-dim:#b6b2cc;--gold:#d9a441;--gold-dim:#a87f33;--aci:#7e86e6;
+    --human:#b070c8;--ai:#44cc7a;--doc:#b6b2cc;--evid:#d9a441;--code:#73b3a3;--head:#e7e3f0;--meta:#5b5878;}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--sea);color:var(--parch);font-family:"Spectral",Georgia,serif;line-height:1.58;
+    -webkit-font-smoothing:antialiased;background-image:radial-gradient(1100px 620px at 80% -12%,rgba(126,134,230,.13),transparent 60%);
+    display:flex;justify-content:center}
+  .card{max-width:760px;width:100%;padding:34px 24px 56px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-dim)}
+  h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(38px,9vw,58px);margin:6px 0 0;line-height:.96;letter-spacing:-.5px}
+  h1 .gk{display:block;font-size:.32em;color:var(--lead);letter-spacing:.05em;margin-top:7px;font-style:italic}
+  .sub{font-style:italic;font-weight:300;color:var(--parch-dim);font-size:16px;margin:16px 0 0;max-width:62ch}
+  .sub b{color:var(--aci);font-style:normal;font-weight:400}
+  h2{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-dim);
+    margin:30px 0 12px;font-weight:500;border-top:1px solid var(--line);padding-top:18px}
+  p.body{font-size:15px;color:var(--parch-dim);max-width:64ch} p.body b{color:var(--parch)}
+
+  .symtab{display:grid;grid-template-columns:auto auto 1fr;gap:6px 14px;font-size:13.5px;background:rgba(0,0,0,.2);
+    border:1px solid var(--line);border-radius:8px;padding:14px 16px;align-items:baseline}
+  .symtab .sy{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:700}
+  .symtab .ro{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em}
+  .symtab .rl{color:var(--parch-dim);font-size:13px}
+
+  .lab{display:flex;gap:12px;flex-wrap:wrap}
+  .editor,.out{flex:1;min-width:280px}
+  textarea{width:100%;height:300px;background:#0a0716;border:1px solid var(--line);border-radius:8px;color:var(--parch);
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.5;padding:12px;resize:vertical;tab-size:2}
+  textarea:focus{outline:none;border-color:rgba(126,134,230,.5)}
+  .render{height:300px;overflow-y:auto;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .blk{display:flex;gap:10px;margin:2px 0;align-items:baseline}
+  .blk .tag{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.06em;min-width:64px;text-align:right;flex-shrink:0;opacity:.85;padding-top:2px}
+  .blk .ct{flex:1;font-size:13.5px;word-break:break-word}
+  .blk .ct.b{font-weight:700} .blk .ct.head{font-size:17px;font-weight:700;margin-top:6px}
+  .blk pre{margin:0;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:5px;padding:8px 10px;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;white-space:pre-wrap;flex:1}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  button{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.18));border:1px solid var(--line);
+    border-radius:5px;color:var(--parch);font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.03em;padding:8px 12px;transition:.15s}
+  button:hover{border-color:rgba(126,134,230,.5);background:rgba(126,134,230,.07)}
+  button.primary{border-color:rgba(126,134,230,.5);color:var(--aci)}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-family:"IBM Plex Mono",monospace;font-size:11px}
+  .stats .s{border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+  .stats .s b{font-weight:700}
+  .selfhost{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--lead);margin-top:10px;min-height:18px}
+  .selfhost b{color:var(--ai)}
+
+  .note{margin-top:26px;border-top:1px solid var(--line);padding-top:15px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;line-height:1.85;color:var(--lead-dim)}
+  .note b{color:var(--gold-dim);font-weight:500}
+  .foot{display:flex;justify-content:space-between;margin-top:22px;font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px;color:var(--lead-dim);letter-spacing:.05em;flex-wrap:wrap;gap:6px}
+  .foot a{color:var(--aci);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">ACI family · member H · defensive publication · .haci</div>
+  <h1>HACI · Human Mark Down<span class="gk">Human-AI Collaborative Interchange · who said what, in Markdown</span></h1>
+  <p class="sub">Documents co-authored by a human and an AI flatten into one undifferentiated voice — you can't tell a <b>human directive</b> from a <b>machine proposal</b> from <b>verified evidence</b>. HACI fixes that <i>inside the document's own syntax</i>: two new prefix symbols and one case convention tag every line by authorial role — and a <b>single-pass, deterministic parser</b> reads it back with no NLP and no language model. It stays valid Markdown anywhere. The first specified member of the <b>ACI</b> family.</p>
+
+  <h2>the whole grammar</h2>
+  <div class="symtab">
+    <span class="sy" style="color:var(--human)">!</span><span class="ro" style="color:var(--human)">HUMAN</span><span class="rl">a human command — carries authority</span>
+    <span class="sy" style="color:var(--ai)">?</span><span class="ro" style="color:var(--ai)">QUESTION</span><span class="rl">a question; lowercase body = AI asks, uppercase / <b style="color:var(--human)">?!</b> = human asks</span>
+    <span class="sy" style="color:var(--evid)">&gt;</span><span class="ro" style="color:var(--evid)">EVIDENCE</span><span class="rl">output / a verified observation (Markdown blockquote)</span>
+    <span class="sy" style="color:var(--head)">#</span><span class="ro" style="color:var(--head)">HEADING</span><span class="rl">a section heading (Markdown native)</span>
+    <span class="sy" style="color:var(--code)">```</span><span class="ro" style="color:var(--code)">CODE</span><span class="rl">a fenced code block (Markdown native)</span>
+    <span class="sy" style="color:var(--doc)">A…</span><span class="ro" style="color:var(--doc)">DOC</span><span class="rl">first letter UPPERCASE → documentation (human prose)</span>
+    <span class="sy" style="color:var(--ai)">a…</span><span class="ro" style="color:var(--ai)">AI</span><span class="rl">first letter lowercase → AI proposal / reasoning</span>
+  </div>
+
+  <h2>the live parser — type, and watch it attribute</h2>
+  <div class="lab">
+    <div class="editor"><textarea id="src" spellcheck="false">&lt;!-- HACI v0.1 --&gt;
+! BUILD THE TASK SCHEDULER
+The scheduler manages work distribution across threads.
+Each worker pulls from a priority queue.
+allocate thread pool based on cpu count
+initialize priority heap
+wire up the completion callbacks
+? should we use a work-stealing strategy or round-robin?
+> benchmarks show work-stealing is 2.3x faster for uneven loads
+! USE WORK-STEALING
+implement work-stealing with per-thread deques
+```python
+class Scheduler:
+    def __init__(self, n_workers):
+        self.deques = [deque() for _ in range(n_workers)]
+```
+> scheduler instantiated with 8 workers</textarea></div>
+    <div class="out"><div class="render" id="render"></div></div>
+  </div>
+  <div class="controls">
+    <button class="primary" id="loadspec">⌕ load the self-hosting spec</button>
+    <button id="loadex">↺ reset example</button>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--lead-dim)">single-pass · O(n) · one regex · zero role-specific special cases</span>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="selfhost" id="selfhost"></div>
+
+  <h2>why it parses cleanly</h2>
+  <p class="body" style="margin-top:0">Five normative principles: (1) human intent is explicit; (2) machine contributions are identifiable; (3) evidence is distinguishable from intent; (4) it stays valid Markdown; (5) the grammar stays minimal. The lexer is single-pass, line-by-line, no lookahead, classifying each line by priority: <b>!</b> human → <b>?</b> question → <b>&gt;</b> evidence → code-fence toggle → <b>#</b> heading → the case convention → fallback. Role-tags inside a fenced block are content, not markers. <b>It self-hosts</b>: the v0.1 spec is written in its own format and parses correctly under its own rules — load it above.</p>
+
+  <div class="note">
+    <b>what this is.</b> a defensive publication under the Technical Disclosure Commons — establishing prior art for: line-prefix role symbols (! human, ? question) + a first-alphabetic-character case convention; compound prefixes (?! / !?); a single-pass fence-tracking lexer that deterministically classifies every line; a self-hosting spec; and the <b>.haci</b> extension. Not a patent. Distinguished from Markdown extensions (add structure, not authorship), chat role fields (stop at the API boundary), tracked-changes / git-blame (provenance external, not in-syntax), and XML/YAML (semantic but not human-readable Markdown). The reference parser <code>hmd.py</code> and the self-hosting spec ship in this repo.
+    <br><b>names.</b> HACI = Human-AI Collaborative Interchange (formal) = "Human Mark Down" (friendly) — the <b>H</b> member of the ACI family.
+  </div>
+
+  <div class="foot">
+    <span>HACI · v0.1 · .haci · 2026-06-26</span>
+    <span>David Lee Wise · Bridge-Burners LLC · <a href="https://davidwise01.github.io/aci-namespace/">the ACI namespace ↗</a></span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ── HACI lexer, ported from hmd.py (single-pass, deterministic) ──
+  function classify(line){
+    var s=line.trim();
+    if(!s) return ['BLANK','',null];
+    if(s[0]==='!'){ var b=s.slice(1).trim(); if(b[0]==='?') return ['HUMAN_QUESTION',b.slice(1).trim(),'!?']; return ['HUMAN',b,'!']; }
+    if(s[0]==='?'){ var b=s.slice(1).trim(); if(b[0]==='!') return ['HUMAN_QUESTION',b.slice(1).trim(),'?!'];
+      for(var i=0;i<b.length;i++){ var c=b[i]; if(/[a-zA-Z]/.test(c)) return [/[A-Z]/.test(c)?'HUMAN_QUESTION':'AI_QUESTION', b, '?']; }
+      return ['AI_QUESTION',b,'?']; }
+    if(s[0]==='>') return ['EVIDENCE', s.slice(1).trim(), '>'];
+    if(/^(`{3,}|~{3,})/.test(s)) return ['CODE_FENCE', s, null];
+    if(/^#{1,6}\s/.test(s)) return ['HEADING', s.replace(/^#+/,'').trim(), '#'];
+    if(s.slice(0,4)==='<!--') return ['META', s, null];
+    for(var i=0;i<s.length;i++){ var c=s[i]; if(/[a-zA-Z]/.test(c)) return [/[A-Z]/.test(c)?'DOCUMENTATION':'AI', s, null]; }
+    return ['DOCUMENTATION', s, null];
+  }
+  function parse(text){
+    var lines=text.split('\n'), blocks=[], inF=false, buf=[], fs=0, warn=[];
+    for(var i=0;i<lines.length;i++){ var line=lines[i], ln=i+1;
+      if(/^\s*(`{3,}|~{3,})/.test(line)){
+        if(inF){ buf.push(line); blocks.push({role:'CODE',content:buf.join('\n'),line:fs}); buf=[]; inF=false; continue; }
+        else { inF=true; buf=[line]; fs=ln; continue; }
+      }
+      if(inF){ buf.push(line); continue; }
+      var r=classify(line); if(r[0]==='BLANK') continue;
+      blocks.push({role:r[0],content:r[1],line:ln});
+    }
+    if(buf.length){ warn.push('unclosed fence @'+fs); blocks.push({role:'CODE',content:buf.join('\n'),line:fs}); }
+    return {blocks:blocks, warnings:warn};
+  }
+  var ROLE={HUMAN:['var(--human)','b','HUMAN !'],HUMAN_QUESTION:['var(--human)','b','HUMAN ?'],
+    AI:['var(--ai)','','AI'],AI_QUESTION:['var(--ai)','','AI ?'],DOCUMENTATION:['var(--doc)','','DOC'],
+    EVIDENCE:['var(--evid)','','EVIDENCE'],CODE:['var(--code)','','CODE'],HEADING:['var(--head)','head','HEADING'],META:['var(--meta)','','META']};
+  function esc(s){ return s.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+
+  var srcEl=document.getElementById('src'), renderEl=document.getElementById('render'),
+      statsEl=document.getElementById('stats'), shEl=document.getElementById('selfhost');
+
+  function render(text, isSpec){
+    var R=parse(text), b=R.blocks, html='', counts={};
+    b.forEach(function(blk){ var r=blk.role, m=ROLE[r]||['#9a98b6','',r]; counts[r]=(counts[r]||0)+1;
+      if(r==='CODE'){ var ls=blk.content.split('\n'); var body=ls.length>2?ls.slice(1,-1).join('\n'):blk.content;
+        html+='<div class="blk"><span class="tag" style="color:'+m[0]+'">'+m[2]+'</span><pre style="color:'+m[0]+'">'+esc(body)+'</pre></div>'; }
+      else { var cls='ct'+(m[1]==='b'?' b':m[1]==='head'?' head':'');
+        html+='<div class="blk"><span class="tag" style="color:'+m[0]+'">'+m[2]+'</span><div class="'+cls+'" style="color:'+m[0]+'">'+esc(blk.content)+'</div></div>'; }
+    });
+    renderEl.innerHTML=html||'<span style="color:var(--lead-dim)">— empty —</span>';
+    // stats
+    var order=['HUMAN','HUMAN_QUESTION','AI','AI_QUESTION','DOCUMENTATION','EVIDENCE','CODE','HEADING','META'];
+    statsEl.innerHTML=order.filter(function(r){return counts[r];}).map(function(r){ var m=ROLE[r];
+      return '<span class="s" style="color:'+m[0]+'"><b>'+counts[r]+'</b> '+m[2]+'</span>'; }).join('')
+      + '<span class="s"><b>'+b.length+'</b> blocks'+(R.warnings.length?' · ⚠ '+R.warnings.join(', '):'')+'</span>';
+    // self-host verdict (only when the spec is loaded)
+    if(isSpec){ var need=['HUMAN','AI','DOCUMENTATION','EVIDENCE','CODE','HEADING'];
+      var ok=need.every(function(r){return counts[r];}) && (counts.HUMAN>=3) && (counts.AI>=3) && (counts.DOCUMENTATION>=5) && (counts.CODE>=3);
+      shEl.innerHTML = ok ? '<b>✓ SELF-HOSTING TEST PASSED</b> — the spec parses in its own format ('+b.length+' blocks, all required roles present)'
+                          : '— loaded the spec ('+b.length+' blocks) —';
+    } else { shEl.textContent=''; }
+  }
+
+  srcEl.addEventListener('input',function(){ render(srcEl.value,false); });
+  document.getElementById('loadex').addEventListener('click',function(){ location.reload(); });
+  document.getElementById('loadspec').addEventListener('click',function(){
+    shEl.textContent='loading hmd-spec.hmd…';
+    fetch('hmd-spec.hmd').then(function(r){ return r.ok?r.text():Promise.reject(); }).then(function(t){
+      srcEl.value=t; render(t,true);
+    }).catch(function(){ shEl.innerHTML='<span style="color:var(--evid)">could not fetch the spec file (serve over http to load it)</span>'; });
+  });
+
+  render(srcEl.value,false);
+})();
+</script>
+</body>
+</html>

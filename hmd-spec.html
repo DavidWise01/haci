@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hmd-spec.hmd</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Spectral:wght@300;400&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#170d20;color:#c8c0b0;font-family:"Spectral",serif;line-height:1.6;display:flex;justify-content:center}
+.doc{max-width:720px;width:100%;padding:32px 24px 60px}
+.block{display:flex;gap:12px;margin:3px 0;align-items:baseline}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.08em;min-width:72px;text-align:right;
+  opacity:.5;flex-shrink:0;padding-top:2px}
+.content{flex:1;font-size:15px}
+.content.bold{font-weight:bold}
+pre{background:rgba(0,0,0,.25);border:1px solid rgba(154,152,166,.15);border-radius:6px;padding:12px;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;overflow-x:auto;margin:0;white-space:pre-wrap}
+.heading{font-size:22px;font-weight:bold;margin-top:18px;color:#e9e2d2}
+.h2{font-size:18px} .h3{font-size:15px}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<div class="block"><span class="tag" style="color:#5b5868">META</span><div class="content" style="color:#5b5868">&lt;!-- HMD v0.1 --&gt;</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Human-Machine Dialect (HMD) — Specification v0.1</div></div>
+<div class="block"><span class="tag" style="color:#8a2be2">HUMAN</span><div class="content bold" style="color:#8a2be2">THIS DOCUMENT IS THE SPECIFICATION FOR HMD v0.1</div></div>
+<div class="block"><span class="tag" style="color:#8a2be2">HUMAN</span><div class="content bold" style="color:#8a2be2">IT IS WRITTEN IN ITS OWN FORMAT AS A SELF-HOSTING TEST</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Purpose</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">HMD is a semantic layer on Markdown for human–machine collaboration.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">It marks who said what and what authority they carry, using three</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">symbols and one case convention, while remaining valid Markdown.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Design Principles</div></div>
+<div class="block"><span class="tag" style="color:#8a2be2">HUMAN</span><div class="content bold" style="color:#8a2be2">THESE FIVE PRINCIPLES ARE NORMATIVE AND IMMUTABLE</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">1. Human intent is explicit.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">2. Machine contributions are identifiable.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">3. Evidence is distinguishable from intent.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">4. The dialect must remain valid Markdown.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">5. The grammar must stay minimal.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Lexer Rules</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The parser classifies each line independently.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Lines are processed top-to-bottom, one pass, no lookahead.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 1 — Human Command</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">A line starting with `!` (after optional whitespace) is a</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">human command. The `!` is stripped; the remainder is the content.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Human commands carry the highest authority in the document.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">PATTERN:  /^\s*!\s*(.*)$/
+ROLE:     HUMAN
+EXAMPLE:  ! BUILD THE SCHEDULER</pre></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 2 — Open Question</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">A line starting with `?` is a question. The case of the body</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">determines the asker.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">PATTERN:  /^\s*\?\s*(.*)$/
+ROLE:     QUESTION (refined by case — see Rule 7)
+EXAMPLE:  ? should we use work-stealing?
+EXAMPLE:  ? WHY DID THE DEPLOY FAIL?</pre></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">apply case convention to the question body:</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">- lowercase body = AI is asking (exploratory)</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">- uppercase or sentence-case body = human is asking (directive)</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">- `?!` or `!?` prefix = explicitly human question</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 3 — Evidence</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">A line starting with `&gt;` is evidence, observation, or runtime output.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">This maps directly to Markdown blockquote syntax.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">PATTERN:  /^\s*&gt;\s*(.*)$/
+ROLE:     EVIDENCE
+EXAMPLE:  &gt; 12 workers spawned successfully
+EXAMPLE:  &gt; Error: connection refused</pre></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Evidence is always attributed to the external world — a machine,</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">a test result, a measured fact. It is never a proposal or a command.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 4 — Code Fence</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Lines between ` ``` ` or `~~~` markers form a CODE block.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The parser tracks fence open/close state. Role tags inside a</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">fenced block are content, not tags.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">PATTERN:  /^\s*(`{3,}|~{3,})/
+ROLE:     CODE (entire fenced block)</pre></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 5 — Heading</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">A line starting with `#` is structural. This maps directly to</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Markdown heading syntax. Headings are organisational, not</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">attributed to any role.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">PATTERN:  /^\s*#{1,6}\s/
+ROLE:     HEADING</pre></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 6 — Case Convention (Documentation vs AI)</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">For all lines not matched by Rules 1–5, the first alphabetic</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">character determines the role.</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">FIRST ALPHA UPPERCASE  →  DOCUMENTATION
+FIRST ALPHA LOWERCASE  →  AI (proposal, reasoning, implementation)
+NO ALPHA CHARACTERS    →  DOCUMENTATION (fallback)</pre></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">This is a writing convention, not a heuristic. The author controls</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">the signal by choosing how to start the line.</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI ?</span><div class="content" style="color:#1db954">what about brand names like macOS or x86?</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Rephrase so the first word carries the case signal.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Write &quot;The macOS build requires...&quot; not &quot;macOS requires...&quot;.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">This is a two-second writing habit, not a parser limitation.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Rule 7 — Question Subtyping</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The `?` prefix identifies a question. The case convention from</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Rule 6 applies to the body text after the `?` symbol:</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">? lowercase body   →  AI_QUESTION   (exploratory)
+? Uppercase body   →  HUMAN_QUESTION (directive)
+?! any body        →  HUMAN_QUESTION (explicit)</pre></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Parser Behaviour</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Block Granularity</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Each non-blank line is its own block. Consecutive lines with the</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">same role MAY be merged by a renderer but MUST be preserved as</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">separate blocks by the parser.</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI ?</span><div class="content" style="color:#1db954">should we merge consecutive same-role lines at parse time?</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">keep them separate at parse time — merging is a display concern.</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">a renderer can group adjacent same-role blocks visually.</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">the parser should preserve the line-level granularity.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Blank Lines</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Blank lines are not blocks. They separate content visually but</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">carry no semantic role.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Unclosed Fences</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">An unclosed code fence at end-of-document is treated as a CODE</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">block containing all lines from the opening fence to EOF.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The parser SHOULD emit a warning.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Version Header</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">An HMD document SHOULD begin with a comment containing the</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">version identifier:</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">&lt;!-- HMD v0.1 --&gt;</pre></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">This disambiguates HMD from other formats that might use `.hmd`</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">as a file extension.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">File Extension</div></div>
+<div class="block"><span class="tag" style="color:#8a2be2">HUMAN</span><div class="content bold" style="color:#8a2be2">THE FILE EXTENSION FOR HMD DOCUMENTS IS .hmd</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The `.hmd` extension stands for Human-Machine Dialect.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Existing uses of `.hmd` (PlayStation 3D model data, SWAT humidity</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">input) are binary formats with no overlap.</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Symbol Summary</div></div>
+<div class="block"><span class="tag" style="color:#73b3a3">CODE</span><pre style="color:#73b3a3">SYMBOL  ROLE              DETERMINISTIC
+──────  ────              ─────────────
+!       Human command     yes — prefix
+?       Question          yes — prefix + case subtyping
+&gt;       Evidence/output   yes — prefix
+#       Heading           yes — prefix (Markdown native)
+(```)   Code              yes — fence (Markdown native)
+A-Z     Documentation     yes — first-alpha uppercase
+a-z     AI proposal       yes — first-alpha lowercase</pre></div>
+<div class="block"><span class="tag" style="color:#d9a441">EVIDENCE</span><div class="content" style="color:#d9a441">total new symbols: 2 (! and ?)</div></div>
+<div class="block"><span class="tag" style="color:#d9a441">EVIDENCE</span><div class="content" style="color:#d9a441">borrowed from Markdown: 3 (&gt; # ```)</div></div>
+<div class="block"><span class="tag" style="color:#d9a441">EVIDENCE</span><div class="content" style="color:#d9a441">case convention: 1 rule (first alphabetic character)</div></div>
+<div class="block"><span class="tag" style="color:#d9a441">EVIDENCE</span><div class="content" style="color:#d9a441">grammar fits on an index card</div></div>
+<div class="block"><span class="tag" style="color:#e9e2d2">HEADING</span><div class="content heading" style="color:#e9e2d2">Compatibility</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">HMD is a profile of Markdown, not a replacement.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">Every HMD document is valid Markdown.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">An HMD-unaware renderer displays a readable document.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">An HMD-aware renderer adds role attribution.</div></div>
+<div class="block"><span class="tag" style="color:#c8c0b0">DOC</span><div class="content" style="color:#c8c0b0">The dialect renders reasonably in any editor, versions in Git,</div></div>
+<div class="block"><span class="tag" style="color:#1db954">AI</span><div class="content" style="color:#1db954">and parses deterministically with a single-pass line scanner.</div></div>
+<div class="block"><span class="tag" style="color:#8a2be2">HUMAN</span><div class="content bold" style="color:#8a2be2">END OF SPECIFICATION</div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!-- HMD v0.1 -->
+
+# Human-Machine Dialect (HMD) — Specification v0.1
+
+! THIS DOCUMENT IS THE SPECIFICATION FOR HMD v0.1
+! IT IS WRITTEN IN ITS OWN FORMAT AS A SELF-HOSTING TEST
+
+## Purpose
+
+HMD is a semantic layer on Markdown for human–machine collaboration.
+It marks who said what and what authority they carry, using three
+symbols and one case convention, while remaining valid Markdown.
+
+## Design Principles
+
+! THESE FIVE PRINCIPLES ARE NORMATIVE AND IMMUTABLE
+
+1. Human intent is explicit.
+2. Machine contributions are identifiable.
+3. Evidence is distinguishable from intent.
+4. The dialect must remain valid Markdown.
+5. The grammar must stay minimal.
+
+## Lexer Rules
+
+The parser classifies each line independently.
+Lines are processed top-to-bottom, one pass, no lookahead.
+
+### Rule 1 — Human Command
+
+A line starting with `!` (after optional whitespace) is a
+human command. The `!` is stripped; the remainder is the content.
+Human commands carry the highest authority in the document.
+
+```
+PATTERN:  /^\s*!\s*(.*)$/
+ROLE:     HUMAN
+EXAMPLE:  ! BUILD THE SCHEDULER
+```
+
+### Rule 2 — Open Question
+
+A line starting with `?` is a question. The case of the body
+determines the asker.
+
+```
+PATTERN:  /^\s*\?\s*(.*)$/
+ROLE:     QUESTION (refined by case — see Rule 7)
+EXAMPLE:  ? should we use work-stealing?
+EXAMPLE:  ? WHY DID THE DEPLOY FAIL?
+```
+
+apply case convention to the question body:
+- lowercase body = AI is asking (exploratory)
+- uppercase or sentence-case body = human is asking (directive)
+- `?!` or `!?` prefix = explicitly human question
+
+### Rule 3 — Evidence
+
+A line starting with `>` is evidence, observation, or runtime output.
+This maps directly to Markdown blockquote syntax.
+
+```
+PATTERN:  /^\s*>\s*(.*)$/
+ROLE:     EVIDENCE
+EXAMPLE:  > 12 workers spawned successfully
+EXAMPLE:  > Error: connection refused
+```
+
+Evidence is always attributed to the external world — a machine,
+a test result, a measured fact. It is never a proposal or a command.
+
+### Rule 4 — Code Fence
+
+Lines between ` ``` ` or `~~~` markers form a CODE block.
+The parser tracks fence open/close state. Role tags inside a
+fenced block are content, not tags.
+
+```
+PATTERN:  /^\s*(`{3,}|~{3,})/
+ROLE:     CODE (entire fenced block)
+```
+
+### Rule 5 — Heading
+
+A line starting with `#` is structural. This maps directly to
+Markdown heading syntax. Headings are organisational, not
+attributed to any role.
+
+```
+PATTERN:  /^\s*#{1,6}\s/
+ROLE:     HEADING
+```
+
+### Rule 6 — Case Convention (Documentation vs AI)
+
+For all lines not matched by Rules 1–5, the first alphabetic
+character determines the role.
+
+```
+FIRST ALPHA UPPERCASE  →  DOCUMENTATION
+FIRST ALPHA LOWERCASE  →  AI (proposal, reasoning, implementation)
+NO ALPHA CHARACTERS    →  DOCUMENTATION (fallback)
+```
+
+This is a writing convention, not a heuristic. The author controls
+the signal by choosing how to start the line.
+
+? what about brand names like macOS or x86?
+
+Rephrase so the first word carries the case signal.
+Write "The macOS build requires..." not "macOS requires...".
+This is a two-second writing habit, not a parser limitation.
+
+### Rule 7 — Question Subtyping
+
+The `?` prefix identifies a question. The case convention from
+Rule 6 applies to the body text after the `?` symbol:
+
+```
+? lowercase body   →  AI_QUESTION   (exploratory)
+? Uppercase body   →  HUMAN_QUESTION (directive)
+?! any body        →  HUMAN_QUESTION (explicit)
+```
+
+## Parser Behaviour
+
+### Block Granularity
+
+Each non-blank line is its own block. Consecutive lines with the
+same role MAY be merged by a renderer but MUST be preserved as
+separate blocks by the parser.
+
+? should we merge consecutive same-role lines at parse time?
+
+keep them separate at parse time — merging is a display concern.
+a renderer can group adjacent same-role blocks visually.
+the parser should preserve the line-level granularity.
+
+### Blank Lines
+
+Blank lines are not blocks. They separate content visually but
+carry no semantic role.
+
+### Unclosed Fences
+
+An unclosed code fence at end-of-document is treated as a CODE
+block containing all lines from the opening fence to EOF.
+The parser SHOULD emit a warning.
+
+### Version Header
+
+An HMD document SHOULD begin with a comment containing the
+version identifier:
+
+```
+<!-- HMD v0.1 -->
+```
+
+This disambiguates HMD from other formats that might use `.hmd`
+as a file extension.
+
+## File Extension
+
+! THE FILE EXTENSION FOR HMD DOCUMENTS IS .hmd
+
+The `.hmd` extension stands for Human-Machine Dialect.
+Existing uses of `.hmd` (PlayStation 3D model data, SWAT humidity
+input) are binary formats with no overlap.
+
+## Symbol Summary
+
+```
+SYMBOL  ROLE              DETERMINISTIC
+──────  ────              ─────────────
+!       Human command     yes — prefix
+?       Question          yes — prefix + case subtyping
+>       Evidence/output   yes — prefix
+#       Heading           yes — prefix (Markdown native)
+(```)   Code              yes — fence (Markdown native)
+A-Z     Documentation     yes — first-alpha uppercase
+a-z     AI proposal       yes — first-alpha lowercase
+```
+
+> total new symbols: 2 (! and ?)
+> borrowed from Markdown: 3 (> # ```)
+> case convention: 1 rule (first alphabetic character)
+> grammar fits on an index card
+
+## Compatibility
+
+HMD is a profile of Markdown, not a replacement.
+Every HMD document is valid Markdown.
+An HMD-unaware renderer displays a readable document.
+An HMD-aware renderer adds role attribution.
+
+The dialect renders reasonably in any editor, versions in Git,
+and parses deterministically with a single-pass line scanner.
+
+! END OF SPECIFICATION
