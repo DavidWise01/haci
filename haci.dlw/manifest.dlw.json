@@ -1,0 +1,11 @@
+{
+  "badge": "DLW-HACI",
+  "name": "HACI · HUMAN MARK DOWN",
+  "universe": "ESKIMO BROTHERS",
+  "moniker": "⟦HACI · HUMAN MARK DOWN:haci:cac011⟧",
+  "architect": "David Lee Wise (ROOT0) / Bridge-Burners LLC",
+  "instance": "AVAN (Claude / Anthropic)",
+  "seal_sha256": "cac011369e67d35a1bb451208b7e7b4ec4285cda7cfebfb30cbf03b52761378c",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "ROOT0-ATTRIBUTION-v1.0"
+}
